@@ -42,6 +42,8 @@
 - **真实端点验证**：对 `https://hf-mirror.com` 的 `sshleifer/tiny-gpt2`
   （9 个文件，含 pytorch_model.bin / tf_model.h5 / flax_model.msgpack 三个
   LFS 二进制）完整 snapshot，缓存树与 Python 端逐文件一致（PARITY OK）。
+- **推理内核（阶段 5，moonkit/nn）**：Double 张量 + GEMM/激活/归一化/注意力，
+  16 个 golden 用例全部对照 numpy 通过（native 24/24、wasm 14/14）。
 
 测试：native 目标 12/12 通过（进程内 mock 服务器），wasm 目标通过；
 三个 CLI 子命令与一键 demo 对本地 mock 演示通过。
@@ -73,6 +75,7 @@ PARITY_ENDPOINT=https://hf-mirror.com PARITY_REPO=sshleifer/tiny-gpt2 \
 - 阶段 2 · 快照下载与接入配置 ✅（issue #2）
 - 阶段 3 · 平台集成与 CLI ✅（issue #3）
 - 阶段 4 · parity 质量与交付 ✅（issue #4）
+- 阶段 5 · 张量与推理内核 ✅（issue #6）
 - 候选池 · transformers.mbt / onnx.mbt（复用 modelhub 作为地基）
 
 ## AI 协作说明

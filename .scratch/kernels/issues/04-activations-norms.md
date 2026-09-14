@@ -11,9 +11,14 @@ LayerNorm 与 RMSNorm。numpy 对照 golden 测试。
 
 ## Acceptance criteria
 
-- [ ] gelu/softmax/layernorm/rmsnorm 通过 golden 测试
-- [ ] softmax 大数值输入不溢出（稳定性用例）
+- [x] gelu/softmax/layernorm/rmsnorm 通过 golden 测试
+- [x] softmax 大数值输入不溢出（稳定性用例）
 
 ## Blocked by
 
 - `02-tensor-core.md`
+
+## Comments
+
+- 2026-09-14 完成。gelu(tanh 近似)/softmax(max 减除)/LayerNorm/RMSNorm
+  全部通过 numpy golden；softmax 含 1000.0 级稳定性用例。

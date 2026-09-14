@@ -12,9 +12,15 @@ Tensor 核心：构造（含大小校验）、zeros、seeded randn、reshape/tra
 
 ## Acceptance criteria
 
-- [ ] 全部运算通过 numpy golden 测试
-- [ ] reshape 大小不匹配抛错；越界访问行为明确
+- [x] 全部运算通过 numpy golden 测试
+- [x] reshape 大小不匹配抛错；越界访问行为明确
 
 ## Blocked by
 
 - `01-kernel-foundation-decision.md`
+
+## Comments
+
+- 2026-09-14 完成。Tensor（shape/data、zeros、randn、reshape/transpose、
+  add/sub/mul/scale）golden 对照 numpy 通过；reshape 大小不匹配抛
+  `TensorError::ShapeMismatch`。

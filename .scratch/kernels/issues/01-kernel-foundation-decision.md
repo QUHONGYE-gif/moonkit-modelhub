@@ -12,9 +12,14 @@ Status: ready-for-human
 
 ## Acceptance criteria
 
-- [ ] 选型结论文档化（含 moon-tensor/mbtorch 现状摘要）
-- [ ] `nn/` 子包可编译，`moon check --target native` 通过
+- [x] 选型结论文档化（含 moon-tensor/mbtorch 现状摘要）
+- [x] `nn/` 子包可编译，`moon check --target native` 通过
 
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+- 2026-09-14 完成。结论：自研，Double(f64) MVP，朴素实现优先正确性；
+  见 docs/design.md「推理内核」章节。

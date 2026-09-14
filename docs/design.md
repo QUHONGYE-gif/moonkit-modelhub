@@ -2,6 +2,24 @@
 
 > 状态：draft，随 spike 结论更新。任何对本文件的修改应先讨论再落代码。
 
+## 推理内核（moonkit/nn，阶段 5）
+
+**选型结论（2026-09-14）：自研，不复用 moon-tensor / mbtorch。**
+
+现状摘要：moon-tensor 是早期的裸算子集合（GEMM/Conv1D/激活/LayerNorm，
+0 star、API 未定）；mbtorch 面向训练 + 模式匹配导入 ONNX，不在我们的
+推理内核需求路径上。GPT-2 推理所需算子集很小（matmul / gelu / softmax /
+LayerNorm / RMSNorm / attention），自研成本低、可控性强，且与 modelhub 的
+「原创 + golden 对照」叙事一致。
+
+约定：
+
+- 数值类型 MVP 用 **Double(f64)**：与 numpy 默认 double 直接对照 golden，
+  免去 f32 舍入噪音；transformers.mbt 阶段再评估 f32 化。
+- 行主序、纯函数风格（算子返回新 Tensor）；性能优化不在本期（朴素实现优先）。
+- golden 数据一律由 `scripts/gen_nn_golden.py`（numpy）生成，测试逐元素
+  对照（默认容差 1e-5）。
+
 ## 核心 API 草案
 
 ```moonbit
