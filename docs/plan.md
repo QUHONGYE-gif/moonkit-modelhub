@@ -6,9 +6,20 @@
 
 ## 背景与目标
 
-做一个纯 MoonBit 的 HuggingFace Hub 客户端库：让 MoonBit 程序能以
-`snapshot_download("gpt2")` 的方式从 HuggingFace 拉取模型、权重与配置文件，
-并以与 Python `huggingface_hub` 完全一致的布局写入本地缓存。
+本仓库是「MoonBit × HuggingFace 生态栈」系列项目：把 HuggingFace 生态的
+关键基础件用纯 MoonBit 补齐，让 MoonBit 程序能完整地「拉模型 → 跑推理」。
+
+已交付（阶段 0–4）：**modelhub** —— 与 huggingface_hub 缓存/行为 parity 的
+模型下载客户端。`snapshot_download("gpt2")` 即得官方一致的缓存布局，
+已通过本地 mock 与真实 hf-mirror 的双重 parity 验证（PARITY OK）。
+
+候选池（阶段 5–8）：补齐「推理」这一半——
+
+- `moonkit/nn`：Float32 张量与推理内核（GEMM / 激活 / 归一化 / 注意力）
+- `transformers.mbt`：微型 transformers（GPT-2 级架构 + KV cache + 生成），
+  复用 tokenizers-moonbit 与 modelhub
+- `onnx.mbt`：通用 ONNX 图解释执行器（差异化于 mbtorch 的模式匹配导入器）
+- 生态收口：mooncakes 发布、示例、文档、benchmark
 
 赛事要求复盘（验收标准）：
 
@@ -57,7 +68,10 @@
 | 阶段 2 · 快照与接入配置 | 09-18 → 09-19 | `snapshot_download`、认证、离线/镜像 | 见 `.scratch/snapshot-config/issues/` |
 | 阶段 3 · 平台集成与 CLI | 09-20 → 09-21 | API 端点、CLI、错误语义 | 见 `.scratch/platform-cli/issues/` |
 | 阶段 4 · parity 质量与交付 | 09-22 → 09-24 | parity 套件、文档、演示、验收提交 | 见 `.scratch/quality-release/issues/` |
-| 阶段 5 · 候选池 | 本期之后 | transformers.mbt / onnx.mbt | 复用 modelhub 作为地基 |
+| 阶段 5 · 张量与推理内核 | 09-15 → 09-20 | `moonkit/nn`：Tensor、GEMM、激活、注意力 | golden 测试对照 numpy/PyTorch |
+| 阶段 6 · transformers.mbt | 09-21 → 下期 | GPT-2 架构、权重加载、KV cache、生成 | 端到端「拉模型 → 生成文本」 |
+| 阶段 7 · onnx.mbt | 下期 | ONNX 解析 + 通用图执行 + 算子子集 | ONNX backend test 子集 |
+| 阶段 8 · 生态收口与发布 | 持续 | mooncakes 发布、示例、文档、benchmark | 完整生态故事 |
 
 每个阶段独立验收：前一阶段的产出必须能单独演示或验证，再进入下一阶段。
 阶段 1 是唯一存在技术不确定项（HTTP/TLS）的阶段，因此最先展开为 issues。
