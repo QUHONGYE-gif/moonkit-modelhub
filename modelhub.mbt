@@ -1,3 +1,243 @@
-// Main package file for your library code.
-// Put public APIs and shared helpers here.
-// Keep blocks small and focused for easy refactors.
+// modelhub：MoonBit 的 HuggingFace Hub 客户端（阶段 1：单文件下载）。
+
+///|
+pub(all) suberror HubError {
+  RevisionNotFound(String)
+  EntryNotFound(String)
+  BadStatus(Int, String)
+  Parse(String)
+  Io(String)
+} derive(Eq, @debug.Debug)
+
+///|
+pub impl Show for HubError with fn output(self, logger) {
+  match self {
+    RevisionNotFound(url) => logger <+ "revision not found: \{url}"
+    EntryNotFound(url) => logger <+ "entry not found: \{url}"
+    BadStatus(code, url) => logger <+ "bad status \{code} from \{url}"
+    Parse(msg) => logger.write_string(msg)
+    Io(msg) => logger.write_string(msg)
+  }
+}
+
+///|
+pub struct HubConfig {
+  endpoint : String
+  cache_dir : String
+  revision : String
+  subfolder : String
+}
+
+///|
+pub fn HubConfig::new(endpoint : String, cache_dir : String) -> HubConfig {
+  { endpoint, cache_dir, revision: "main", subfolder: "", }
+}
+
+///|
+pub fn HubConfig::with_revision(
+  self : HubConfig,
+  revision : String,
+) -> HubConfig {
+  { ..self, revision, }
+}
+
+///|
+pub fn HubConfig::with_subfolder(
+  self : HubConfig,
+  subfolder : String,
+) -> HubConfig {
+  { ..self, subfolder, }
+}
+
+///|
+/// 默认端点：HF_ENDPOINT 环境变量，否则官方地址。
+pub fn default_endpoint() -> String {
+  @env.get_env_var("HF_ENDPOINT").unwrap_or("https://huggingface.co")
+}
+
+///|
+/// 默认缓存根目录：HF_HUB_CACHE，否则 ~/.cache/huggingface/hub。
+pub fn default_cache_dir() -> String {
+  match @env.get_env_var("HF_HUB_CACHE") {
+    Some(p) => p
+    None =>
+      match @env.get_env_var("HOME") {
+        Some(h) => "\{h}/.cache/huggingface/hub"
+        None => "/tmp/huggingface/hub"
+      }
+  }
+}
+
+///|
+fn strip_quotes(s : String) -> String {
+  if s.length() >= 2 && s.has_prefix("\"") && s.has_suffix("\"") {
+    s[1:s.length() - 1].to_owned()
+  } else {
+    s
+  }
+}
+
+///|
+/// 解析 revision 为 commit sha：优先读本地 refs 文件（零网络），
+/// 否则请求远端 API 并写回 refs。
+pub async fn resolve_sha(
+  endpoint : String,
+  repo_id : String,
+  revision : String,
+  cache_dir : String,
+) -> String raise HubError {
+  let refs = refs_path(cache_dir, repo_id, revision)
+  match read_refs_file(refs) {
+    Some(sha) => sha
+    None => {
+      let sha = resolve_sha_remote(endpoint, repo_id, revision)
+      ensure_dir(dirname(refs))
+      write_file_checked(refs, sha)
+      sha
+    }
+  }
+}
+
+///|
+/// 走 /api/models/<repo>/revision/<rev> 解析 revision。
+pub async fn resolve_sha_remote(
+  endpoint : String,
+  repo_id : String,
+  revision : String,
+) -> String raise HubError {
+  let url = "\{endpoint}/api/models/\{repo_id}/revision/\{revision}"
+  let (code, _headers, body) = get_follow(url, Map([]), 5)
+  if code == 404 {
+    raise HubError::RevisionNotFound(url)
+  }
+  guard code == 200 else { raise HubError::BadStatus(code, url) }
+  let text = @utf8.decode(body) catch {
+    _ => raise HubError::Parse("invalid UTF-8 from \{url}")
+  }
+  let json = @json.parse(text) catch {
+    _ => raise HubError::Parse("invalid JSON from \{url}")
+  }
+  let obj = match json {
+    Json::Object(o) => o
+    _ => raise HubError::Parse("expected JSON object from \{url}")
+  }
+  match obj.get("sha") {
+    Some(Json::String(sha)) => sha
+    _ => raise HubError::Parse("missing or non-string `sha` field from \{url}")
+  }
+}
+
+///|
+/// 下载 url 到 blobs 目录：探测 etag，流式写入 blobs/<etag>.incomplete，
+/// 支持断点续传（Range），完成后重命名为 blobs/<etag>，返回 etag。
+pub async fn download_resumable(
+  url : String,
+  blobs : String,
+) -> String raise HubError {
+  let (code, headers, client) = get_stream_follow(url, Map([]), 10)
+  if code == 404 {
+    client.close()
+    raise HubError::EntryNotFound(url)
+  }
+  guard code == 200 else {
+    client.close()
+    raise HubError::BadStatus(code, url)
+  }
+  let etag = match headers.get("etag") {
+    Some(e) => strip_quotes(e)
+    None => {
+      client.close()
+      raise HubError::Parse("missing `etag` header from \{url}")
+    }
+  }
+  let dest = "\{blobs}/\{etag}"
+  if path_exists(dest) {
+    client.close()
+    return etag
+  }
+  let incomplete = dest + ".incomplete"
+  let offset = partial_size(incomplete)
+  if offset > 0 {
+    client.close()
+    let headers2 : @http.Headers = { "Range": "bytes=\{offset}-" }
+    let (code2, _headers2, client2) = get_stream_follow(url, headers2, 10)
+    guard code2 == 206 else {
+      client2.close()
+      raise HubError::BadStatus(code2, url)
+    }
+    copy_stream(client2, incomplete, offset)
+    rename_checked(incomplete, dest)
+  } else {
+    copy_stream(client, incomplete, 0)
+    rename_checked(incomplete, dest)
+  }
+  etag
+}
+
+///|
+/// 把 client 的剩余响应体写入 path；offset > 0 时以追加模式续写。
+/// 中断时保留已写入的部分并抛 Io。
+pub async fn copy_stream(
+  client : @http.Client,
+  path : String,
+  offset : Int,
+) -> Unit raise HubError {
+  let resuming = offset > 0
+  let create_mode = if resuming {
+    @fs.CreateMode::OpenExisting
+  } else {
+    @fs.CreateMode::CreateOrTruncate
+  }
+  let file = @fs.open(
+    path,
+    mode=@fs.Mode::WriteOnly,
+    append=resuming,
+    create_mode~,
+  ) catch {
+    _ => raise HubError::Io("open failed: \{path}")
+  }
+  try {
+    while client.read_some() is Some(chunk) {
+      file.write(chunk)
+    }
+  } catch {
+    _ => {
+      file.close()
+      raise HubError::Io("download interrupted: \{path}")
+    }
+  }
+  file.close()
+}
+
+///|
+/// 下载 repo 中的单个文件到 HF 兼容缓存，返回快照目录中的本地文件路径。
+/// 缓存命中时不做任何网络请求。
+pub async fn hf_hub_download(
+  repo_id : String,
+  filename : String,
+  config : HubConfig,
+) -> String raise HubError {
+  let sha = resolve_sha(
+    config.endpoint,
+    repo_id,
+    config.revision,
+    config.cache_dir,
+  )
+  let rel_file = if config.subfolder.is_empty() {
+    filename
+  } else {
+    config.subfolder + "/" + filename
+  }
+  let snap_file = "\{snapshot_dir(config.cache_dir, repo_id, sha)}/\{rel_file}"
+  if path_exists(snap_file) {
+    return snap_file
+  }
+  let url = "\{config.endpoint}/\{repo_id}/resolve/\{config.revision}/\{filename}"
+  let blobs = blob_dir(config.cache_dir, repo_id)
+  ensure_dir(blobs)
+  let etag = download_resumable(url, blobs)
+  let snap_dir = dirname(snap_file)
+  ensure_dir(snap_dir)
+  symlink_checked("../../blobs/\{etag}", snap_file)
+  snap_file
+}

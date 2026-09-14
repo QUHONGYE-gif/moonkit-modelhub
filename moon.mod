@@ -23,4 +23,8 @@ preferred_target = "wasm"
 
 description = "MoonBit 的 HuggingFace Hub 客户端：与 huggingface_hub 兼容的模型下载、修订版本解析与缓存管理。"
 
-keywords = ["huggingface", "hub", "llm", "ml", "download", "cache"]
+keywords = [ "huggingface", "hub", "llm", "ml", "download", "cache" ]
+
+import {
+  "moonbitlang/async@0.21.3",
+}

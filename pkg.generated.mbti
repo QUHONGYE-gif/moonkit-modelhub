@@ -1,0 +1,78 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonkit/modelhub"
+
+import {
+  "moonbitlang/async/http",
+  "moonbitlang/async/io",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn blob_dir(String, String) -> String
+
+pub async fn copy_stream(@http.Client, String, Int) -> Unit raise HubError
+
+pub fn default_cache_dir() -> String
+
+pub fn default_endpoint() -> String
+
+pub fn dirname(String) -> String
+
+pub async fn download_resumable(String, String) -> String raise HubError
+
+pub async fn ensure_dir(String) -> Unit raise HubError
+
+pub async fn get_follow(String, Map[@http.CaseInsensitiveString, String], Int) -> (Int, Map[@http.CaseInsensitiveString, String], Bytes) raise HubError
+
+pub async fn get_stream_follow(String, Map[@http.CaseInsensitiveString, String], Int) -> (Int, Map[@http.CaseInsensitiveString, String], @http.Client) raise HubError
+
+pub async fn hf_hub_download(String, String, HubConfig) -> String raise HubError
+
+pub async fn partial_size(String) -> Int raise HubError
+
+pub async fn path_exists(String) -> Bool raise HubError
+
+pub async fn read_refs_file(String) -> String? raise HubError
+
+pub fn refs_path(String, String, String) -> String
+
+pub async fn remove_file(String) -> Unit raise HubError
+
+pub async fn rename_checked(String, String) -> Unit raise HubError
+
+pub fn repo_cache_dir(String, String) -> String
+
+pub async fn resolve_sha(String, String, String, String) -> String raise HubError
+
+pub async fn resolve_sha_remote(String, String, String) -> String raise HubError
+
+pub fn snapshot_dir(String, String, String) -> String
+
+pub async fn symlink_checked(String, String) -> Unit raise HubError
+
+pub async fn write_file_checked(String, &@io.Data) -> Unit raise HubError
+
+// Errors
+pub(all) suberror HubError {
+  RevisionNotFound(String)
+  EntryNotFound(String)
+  BadStatus(Int, String)
+  Parse(String)
+  Io(String)
+} derive(Eq, @debug.Debug)
+pub impl Show for HubError
+
+// Types and methods
+pub struct HubConfig {
+  endpoint : String
+  cache_dir : String
+  revision : String
+  subfolder : String
+}
+pub fn HubConfig::new(String, String) -> Self
+pub fn HubConfig::with_revision(Self, String) -> Self
+pub fn HubConfig::with_subfolder(Self, String) -> Self
+
+// Type aliases
+
+// Traits

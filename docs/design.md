@@ -61,16 +61,26 @@ pub fn model_info(repo_id : String) -> RepoInfo!HubError
 | `HF_HUB_OFFLINE` | 离线模式，禁网络 | ✅ |
 | `HF_HUB_DOWNLOAD_TIMEOUT` | 下载超时 | ✅ |
 
-## HTTP 层（待 spike 定论）
+## HTTP 层（已定：moonbitlang/async，2026-09-14 spike 结论）
 
-三个候选，按优先级：
+**选型：`moonbitlang/async@0.21.3` 的 `http` 包作为唯一传输层。** spike 验证结果
+（代码在 `cmd/spike/`，验收见 issue 01）：
 
-1. `moonbitlang/async` 的 http 模块（native/wasm 后端统一，官方维护）；
-2. 后端抽象 trait：native 走 libcurl FFI，wasm/js 走 fetch——牺牲"无 FFI"换取稳妥；
-3. 自研最小 HTTPS 客户端——工作量过大，不推荐。
+- native 后端对 `https://hf-mirror.com/api/models/gpt2` 的 HTTPS GET 返回 200，
+  TLS 可用（OpenSSL 后端；wasm 目标走 WASI TLS，js 走 fetch，三后端都有 client）；
+- 自定义 Header（Range）正常传递，本地 mock 的 200/302 响应均正常；
+- **async 客户端不自动跟随重定向**，`/resolve` 会 302 到 CDN，因此 modelhub
+  自实现 3xx 循环（`http_client.mbt` 的 `get_follow`）；
+- `@http.get_stream` 提供流式读取，阶段 1 的断点续传将基于它实现。
 
-spike 实验（09-15 前完成）：用每个候选对 `https://hf-mirror.com` 完成一次带 Range 头的
-GET 请求，验证 TLS、重定向、流式读取三件事。
+候选记录（结论落定前的备选，均不再需要）：
+
+1. ✅ `moonbitlang/async` 的 http 模块——选定
+2. ❌ 后端抽象 trait（libcurl FFI + js fetch）——async 已覆盖三后端
+3. ❌ 自研最小 HTTPS 客户端——放弃
+
+注意：新版 MoonBit 的错误系统要求每个可能抛错的调用显式吸收（`try/catch`），
+`http_client.mbt` / `cache.mbt` 已把底层错误统一映射为 `HubError`。
 
 ## 测试策略
 

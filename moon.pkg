@@ -1,0 +1,16 @@
+import {
+  "moonbitlang/core/env",
+  "moonbitlang/core/debug",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/json",
+  "moonbitlang/async/http",
+  "moonbitlang/async/fs",
+  "moonbitlang/async/io",
+}
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/string",
+  "moonbitlang/async",
+  "moonbitlang/async/socket",
+} for "test"

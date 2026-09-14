@@ -13,11 +13,18 @@ Status: ready-for-agent
 
 ## Acceptance criteria
 
-- [ ] 对 mock 服务器执行 `download gpt2 config.json`，返回路径正确且文件内容一致
-- [ ] 生成的缓存树与 huggingface_hub 布局一致（blobs / snapshots / refs 三层）
-- [ ] 文件不存在时抛出 `EntryNotFound`
-- [ ] 单测覆盖 revision 解析与缓存路径构造
+- [x] 对 mock 服务器执行 `download gpt2 config.json`，返回路径正确且文件内容一致
+- [x] 生成的缓存树与 huggingface_hub 布局一致（blobs / snapshots / refs 三层）
+- [x] 文件不存在时抛出 `EntryNotFound`
+- [x] 单测覆盖 revision 解析与缓存路径构造
 
 ## Blocked by
 
 - `01-http-tls-spike.md`
+
+## Comments
+
+- 2026-09-14 完成。核心实现：`modelhub.mbt`（API + revision 解析）、
+  `http_client.mbt`（GET + 重定向）、`cache.mbt`（缓存布局与 IO 映射）。
+  测试：进程内 mock 服务器，`moon test --target native` 3/3 通过；
+  CLI 对 Python mock 端到端演示通过。

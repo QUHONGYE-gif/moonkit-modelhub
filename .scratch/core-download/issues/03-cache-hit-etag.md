@@ -11,10 +11,16 @@ Status: ready-for-agent
 
 ## Acceptance criteria
 
-- [ ] 第二次调用零 HTTP 请求（mock 记录为 0）
-- [ ] etag 变化后产生新 blob 与新 snapshot，refs 更新
-- [ ] 旧 blob 保留，不破坏其它 snapshot 的去重共享
+- [x] 第二次调用零 HTTP 请求（mock 记录为 0）
+- [x] etag 变化后产生新 blob 与新 snapshot，refs 更新
+- [x] 旧 blob 保留，不破坏其它 snapshot 的去重共享
 
 ## Blocked by
 
 - `02-single-file-download.md`
+
+## Comments
+
+- 2026-09-14 完成。实现：`resolve_sha` 本地 refs 优先（命中即零网络），
+  `download_resumable` 按 etag 落盘 blobs，旧 blob 天然保留（内容寻址）。
+  测试：`cache hit makes no network request`、`etag change produces new blob and snapshot`。

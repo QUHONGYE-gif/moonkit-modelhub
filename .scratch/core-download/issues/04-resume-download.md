@@ -11,9 +11,16 @@ Status: ready-for-agent
 
 ## Acceptance criteria
 
-- [ ] mock 注入中断后，再次调用从断点续传完成
-- [ ] 最终文件哈希与全量下载一致；`.incomplete` 文件被清理
+- [x] mock 注入中断后，再次调用从断点续传完成
+- [x] 最终文件哈希与全量下载一致；`.incomplete` 文件被清理
 
 ## Blocked by
 
 - `02-single-file-download.md`
+
+## Comments
+
+- 2026-09-14 完成。实现：`copy_stream` 流式写入 `blobs/<etag>.incomplete`，
+  中断保留已写部分；重试时携带 `Range: bytes=<offset>-` 续传（206），
+  完成后 `rename` 为最终 blob 并清理 `.incomplete`。
+  测试：`resume download after interruption`（服务端注入 5 字节后断连）。
