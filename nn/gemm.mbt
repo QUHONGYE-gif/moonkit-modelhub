@@ -30,6 +30,28 @@ pub fn Tensor::matmul(
 ) -> Tensor raise TensorError {
   if self.shape.length() == 2 && other.shape.length() == 2 {
     matmul_2d(self, other)
+  } else if self.shape.length() == 3 && other.shape.length() == 2 {
+    let b = self.shape[0]
+    let m = self.shape[1]
+    let k = self.shape[2]
+    let k2 = other.shape[0]
+    let n = other.shape[1]
+    guard k == k2 else {
+      raise TensorError::ShapeMismatch("inner dims \{k} != \{k2}")
+    }
+    let data = Array::make(b * m * n, 0.0)
+    for i in 0..<b {
+      for r in 0..<m {
+        for c in 0..<n {
+          let mut s = 0.0
+          for p in 0..<k {
+            s = s + self.data[(i * m + r) * k + p] * other.data[p * n + c]
+          }
+          data[(i * m + r) * n + c] = s
+        }
+      }
+    }
+    { shape: [b, m, n], data, }
   } else if self.shape.length() == 3 && other.shape.length() == 3 {
     guard self.shape[0] == other.shape[0] else {
       raise TensorError::ShapeMismatch("batch size mismatch")

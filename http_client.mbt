@@ -20,6 +20,29 @@ pub async fn get_follow(
   headers : @http.Headers,
   max_redirects : Int,
 ) -> (Int, @http.Headers, Bytes) raise HubError {
+  let mut attempt = 0
+  while true {
+    let result = get_follow_once(url, headers, max_redirects) catch {
+      HubError::Io(_) if attempt < 2 => {
+        attempt = attempt + 1
+        @async.sleep(300) catch {
+          _ => ()
+        }
+        continue
+      }
+      e => raise e
+    }
+    return result
+  }
+  abort("unreachable")
+}
+
+///|
+async fn get_follow_once(
+  url : String,
+  headers : @http.Headers,
+  max_redirects : Int,
+) -> (Int, @http.Headers, Bytes) raise HubError {
   let mut current = url
   let mut remaining = max_redirects
   while true {
@@ -44,6 +67,17 @@ pub async fn get_follow(
 /// 与 get_follow 相同，但流式读取响应体：返回状态码、重定向链上首个
 /// linked etag（优先 x-linked-etag，其次 etag）与客户端 reader。
 pub async fn get_stream_follow(
+  url : String,
+  headers : @http.Headers,
+  max_redirects : Int,
+) -> (Int, String?, @http.Client) raise HubError {
+  // 注意：流式下载不在这里自动重试——中断会保留 .incomplete 部分，
+  // 由 download_resumable 用 Range 显式续传。
+  get_stream_follow_once(url, headers, max_redirects)
+}
+
+///|
+async fn get_stream_follow_once(
   url : String,
   headers : @http.Headers,
   max_redirects : Int,

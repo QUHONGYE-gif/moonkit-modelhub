@@ -24,6 +24,7 @@ pub struct Tensor {
   data : Array[Double]
 } derive(@debug.Debug)
 pub fn Tensor::add(Self, Self) -> Self raise TensorError
+pub fn Tensor::add_bias(Self, Self) -> Self raise TensorError
 pub fn Tensor::from_array_2d(Array[Array[Double]]) -> Self
 pub fn Tensor::gelu(Self) -> Self
 pub fn Tensor::layer_norm(Self, Self?, Self?, Double) -> Self raise TensorError

@@ -1,0 +1,74 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonkit/modelhub/transformers"
+
+import {
+  "moonbitlang/core/ref",
+  "moonkit/modelhub/nn",
+}
+
+// Values
+pub fn parse_config(Json) -> Gpt2Config raise @nn.TensorError
+
+pub fn parse_safetensors(Bytes) -> Map[String, @nn.Tensor] raise @nn.TensorError
+
+// Errors
+
+// Types and methods
+pub struct BlockCache {
+  k : @nn.Tensor
+  v : @nn.Tensor
+}
+
+pub struct Generator {
+  model : Gpt2Model
+  caches : Array[BlockCache]
+  pos : @ref.Ref[Int]
+  rng : @ref.Ref[UInt64]
+}
+pub fn Generator::generate(Self, Array[Int], Int, Double) -> Array[Int] raise @nn.TensorError
+pub fn Generator::new(Gpt2Model) -> Self
+pub fn Generator::step(Self, Int) -> @nn.Tensor raise @nn.TensorError
+
+pub struct Gpt2Block {
+  ln1_w : @nn.Tensor
+  ln1_b : @nn.Tensor?
+  qkv_w : @nn.Tensor
+  qkv_b : @nn.Tensor?
+  proj_w : @nn.Tensor
+  proj_b : @nn.Tensor?
+  ln2_w : @nn.Tensor
+  ln2_b : @nn.Tensor?
+  fc_w : @nn.Tensor
+  fc_b : @nn.Tensor?
+  fc_proj_w : @nn.Tensor
+  fc_proj_b : @nn.Tensor?
+}
+
+pub struct Gpt2Config {
+  vocab_size : Int
+  n_ctx : Int
+  n_embd : Int
+  n_head : Int
+  n_layer : Int
+  intermediate : Int
+  eps : Double
+  bos_token_id : Int
+  eos_token_id : Int
+}
+
+pub struct Gpt2Model {
+  config : Gpt2Config
+  direct : Bool
+  wte : @nn.Tensor
+  wpe : @nn.Tensor
+  blocks : Array[Gpt2Block]
+  ln_f_w : @nn.Tensor
+  ln_f_b : @nn.Tensor?
+  lm_head : @nn.Tensor
+}
+pub fn Gpt2Model::forward(Self, Array[Int]) -> @nn.Tensor raise @nn.TensorError
+pub fn Gpt2Model::load(Gpt2Config, Map[String, @nn.Tensor]) -> Self raise @nn.TensorError
+
+// Type aliases
+
+// Traits

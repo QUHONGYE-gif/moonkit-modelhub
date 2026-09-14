@@ -150,6 +150,23 @@ pub fn Tensor::scale(self : Tensor, s : Double) -> Tensor {
 }
 
 ///|
+/// 沿最后一维广播加 bias（形状 [cols]）。
+pub fn Tensor::add_bias(
+  self : Tensor,
+  bias : Tensor,
+) -> Tensor raise TensorError {
+  guard bias.shape.length() == 1 else {
+    raise TensorError::ShapeMismatch("bias must be 1D")
+  }
+  let cols = self.shape[self.shape.length() - 1]
+  guard bias.shape[0] == cols else {
+    raise TensorError::ShapeMismatch("bias length \{bias.shape[0]} != \{cols}")
+  }
+  let data = self.data.mapi(fn(i, x) { x + bias.data[i % cols] })
+  { shape: self.shape, data, }
+}
+
+///|
 /// xorshift64* 一步。
 fn xorshift_next(state : UInt64) -> UInt64 {
   let mut x = state

@@ -27,4 +27,5 @@ keywords = [ "huggingface", "hub", "llm", "ml", "download", "cache" ]
 
 import {
   "moonbitlang/async@0.21.3",
+  "howtomakeaname/tokenizers-moonbit@0.4.0",
 }
