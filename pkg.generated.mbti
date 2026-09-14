@@ -36,7 +36,7 @@ pub async fn file_size(String) -> Int raise HubError
 
 pub async fn get_follow(String, Map[@http.CaseInsensitiveString, String], Int) -> (Int, Map[@http.CaseInsensitiveString, String], Bytes) raise HubError
 
-pub async fn get_stream_follow(String, Map[@http.CaseInsensitiveString, String], Int) -> (Int, Map[@http.CaseInsensitiveString, String], @http.Client) raise HubError
+pub async fn get_stream_follow(String, Map[@http.CaseInsensitiveString, String], Int) -> (Int, String?, @http.Client) raise HubError
 
 pub async fn hf_hub_download(String, String, HubConfig) -> String raise HubError
 

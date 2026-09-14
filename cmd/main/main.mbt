@@ -134,10 +134,7 @@ async fn run_download(
   }
   let c = config_with(m.values, config)
   let path = @modelhub.hf_hub_download(repo, file, c) catch {
-    e => {
-      println("error: \{e}")
-      return
-    }
+    e => abort("error: \{e}")
   }
   println(path)
 }
@@ -154,10 +151,7 @@ async fn run_snapshot(
   let allow = m.values.get("include")
   let ignore = m.values.get("exclude")
   let snap = @modelhub.snapshot_download(repo, c, allow, ignore) catch {
-    e => {
-      println("error: \{e}")
-      return
-    }
+    e => abort("error: \{e}")
   }
   println(snap)
 }
@@ -168,11 +162,6 @@ async fn run_info(m : @argparse.Matches, config : @modelhub.HubConfig) -> Unit {
     fail("usage: modelhub info <repo>")
   }
   let c = config_with(m.values, config)
-  let info = @modelhub.model_info(repo, c) catch {
-    e => {
-      println("error: \{e}")
-      return
-    }
-  }
+  let info = @modelhub.model_info(repo, c) catch { e => abort("error: \{e}") }
   println(@debug.to_string(info))
 }

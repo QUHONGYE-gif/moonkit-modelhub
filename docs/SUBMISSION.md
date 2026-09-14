@@ -39,6 +39,9 @@
   `modelhub download | snapshot | info`（环境变量继承 + 命令行覆盖）。
 - **parity 验证**：与 Python huggingface_hub 1.31 在同一 mock 上生成的缓存树
   逐文件一致（`scripts/parity_test.py` 输出 PARITY OK）。
+- **真实端点验证**：对 `https://hf-mirror.com` 的 `sshleifer/tiny-gpt2`
+  （9 个文件，含 pytorch_model.bin / tf_model.h5 / flax_model.msgpack 三个
+  LFS 二进制）完整 snapshot，缓存树与 Python 端逐文件一致（PARITY OK）。
 
 测试：native 目标 12/12 通过（进程内 mock 服务器），wasm 目标通过；
 三个 CLI 子命令与一键 demo 对本地 mock 演示通过。
@@ -58,6 +61,10 @@ find /tmp/modelhub-demo        # 观察 HF 兼容缓存树
 # 一键演示与 parity 验证：
 bash scripts/demo.sh
 python scripts/parity_test.py
+
+# 真实端点 parity（可选，需联网）：
+PARITY_ENDPOINT=https://hf-mirror.com PARITY_REPO=sshleifer/tiny-gpt2 \
+  python scripts/parity_test.py
 ```
 
 ## 路线图

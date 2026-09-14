@@ -170,10 +170,11 @@ fn auth_headers(token : String?) -> @http.Headers {
 
 ///|
 fn strip_quotes(s : String) -> String {
-  if s.length() >= 2 && s.has_prefix("\"") && s.has_suffix("\"") {
-    s[1:s.length() - 1].to_owned()
+  let s2 = if s.has_prefix("W/") { s[2:].to_owned() } else { s }
+  if s2.length() >= 2 && s2.has_prefix("\"") && s2.has_suffix("\"") {
+    s2[1:s2.length() - 1].to_owned()
   } else {
-    s
+    s2
   }
 }
 
@@ -215,7 +216,11 @@ pub async fn download_resumable(
   repo_id : String,
 ) -> String raise HubError {
   let blobs = blob_dir(cache_root, repo_id)
-  let (code, headers, client) = get_stream_follow(url, auth_headers(token), 10)
+  let (code, linked_etag, client) = get_stream_follow(
+    url,
+    auth_headers(token),
+    10,
+  )
   if code == 401 || code == 403 {
     client.close()
     raise HubError::GatedRepo(url)
@@ -228,7 +233,7 @@ pub async fn download_resumable(
     client.close()
     raise HubError::BadStatus(code, url)
   }
-  let etag = match headers.get("etag") {
+  let etag = match linked_etag {
     Some(e) => strip_quotes(e)
     None => {
       client.close()
@@ -248,7 +253,7 @@ pub async fn download_resumable(
       None => { "Range": "bytes=\{offset}-" }
       Some(t) => { "Authorization": "Bearer \{t}", "Range": "bytes=\{offset}-" }
     }
-    let (code2, _headers2, client2) = get_stream_follow(url, headers2, 10)
+    let (code2, _linked2, client2) = get_stream_follow(url, headers2, 10)
     guard code2 == 206 else {
       client2.close()
       raise HubError::BadStatus(code2, url)

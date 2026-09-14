@@ -25,3 +25,7 @@ None - can start immediately
   modelhub 与 huggingface_hub 1.31 在同一 mock 上生成的缓存树逐文件一致
   （含 CACHEDIR.TAG、.locks、refs、snapshots 符号链接、trees/<sha>.json）。
   为此对齐了 trees 缓存格式、refs 写入规则、.locks 与 CACHEDIR.TAG。
+- 2026-09-14 真实端点验证：`PARITY_ENDPOINT=https://hf-mirror.com
+  PARITY_REPO=sshleifer/tiny-gpt2`（9 个文件含 LFS 二进制）同样 PARITY OK。
+  过程中修复：弱 ETag（W/）处理、重定向链上 X-Linked-Etag（LFS oid）捕获、
+  CLI 错误退出码。

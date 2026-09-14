@@ -14,10 +14,12 @@ import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PORT = os.environ.get("MOCK_PORT", "8765")
-ENDPOINT = f"http://127.0.0.1:{PORT}"
+MOCK_ENDPOINT = f"http://127.0.0.1:{PORT}"
 WORK = os.environ.get("PARITY_WORK", "/tmp/modelhub-parity")
 PY_CACHE = os.path.join(WORK, "py")
 MBT_CACHE = os.path.join(WORK, "mbt")
+REAL_ENDPOINT = os.environ.get("PARITY_ENDPOINT")
+REPO = os.environ.get("PARITY_REPO", "gpt2")
 
 
 def cache_tree(root):
@@ -36,29 +38,35 @@ def cache_tree(root):
 
 server = None
 try:
+    endpoint = REAL_ENDPOINT
     shutil.rmtree(WORK, ignore_errors=True)
     os.makedirs(WORK)
-    server = subprocess.Popen(
-        [sys.executable, os.path.join(ROOT, "scripts", "mock_hub_server.py")],
-        env={**os.environ, "MOCK_PORT": PORT},
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    time.sleep(0.5)
+    if endpoint is None:
+        endpoint = MOCK_ENDPOINT
+        server = subprocess.Popen(
+            [sys.executable, os.path.join(ROOT, "scripts", "mock_hub_server.py")],
+            env={**os.environ, "MOCK_PORT": PORT},
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        time.sleep(0.5)
 
     py = subprocess.run(
         [
             sys.executable,
             "-c",
+            "import os\n"
             "from huggingface_hub import hf_hub_download, snapshot_download\n"
-            "hf_hub_download('gpt2', 'config.json')\n"
-            "snapshot_download('gpt2')\n",
+            "hf_hub_download(os.environ['PARITY_REPO'], 'config.json')\n"
+            "snapshot_download(os.environ['PARITY_REPO'])\n",
         ],
         env={
             **os.environ,
-            "HF_ENDPOINT": ENDPOINT,
+            "PARITY_REPO": REPO,
+            "HF_ENDPOINT": endpoint,
             "HF_HUB_CACHE": PY_CACHE,
             "HF_HUB_DISABLE_PROGRESS_BARS": "1",
+            "HF_HUB_DISABLE_TELEMETRY": "1",
             "HF_HUB_OFFLINE": "0",
         },
         capture_output=True,
@@ -89,9 +97,9 @@ try:
             "native",
             "--",
             "snapshot",
-            "gpt2",
+            REPO,
             "--endpoint",
-            ENDPOINT,
+            endpoint,
             "--cache-dir",
             MBT_CACHE,
         ],

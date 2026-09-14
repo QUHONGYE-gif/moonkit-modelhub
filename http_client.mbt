@@ -41,17 +41,25 @@ pub async fn get_follow(
 }
 
 ///|
-/// 与 get_follow 相同，但流式读取响应体：返回最终响应头与客户端 reader。
+/// 与 get_follow 相同，但流式读取响应体：返回状态码、重定向链上首个
+/// linked etag（优先 x-linked-etag，其次 etag）与客户端 reader。
 pub async fn get_stream_follow(
   url : String,
   headers : @http.Headers,
   max_redirects : Int,
-) -> (Int, @http.Headers, @http.Client) raise HubError {
+) -> (Int, String?, @http.Client) raise HubError {
   let mut current = url
   let mut remaining = max_redirects
+  let mut linked_etag : String? = None
   while true {
     let (resp, client) = @http.get_stream(current, headers~) catch {
       _ => raise HubError::Io("GET failed: \{current}")
+    }
+    if linked_etag is None {
+      linked_etag = match resp.headers.get("x-linked-etag") {
+        Some(e) => Some(e)
+        None => resp.headers.get("etag")
+      }
     }
     if resp.code >= 300 && resp.code < 400 && remaining > 0 {
       let loc = match resp.headers.get("location") {
@@ -65,7 +73,7 @@ pub async fn get_stream_follow(
       current = if loc.has_prefix("http") { loc } else { origin(current) + loc }
       remaining -= 1
     } else {
-      return (resp.code, resp.headers, client)
+      return (resp.code, linked_etag, client)
     }
   }
   abort("unreachable")
