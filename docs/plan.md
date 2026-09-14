@@ -48,16 +48,19 @@
 - 并行分片下载、进度条渲染（可后续版本）
 - transformers / onnx 推理本身（见下方候选池）
 
-## 里程碑（2026-09-14 → 09-24）
+## 大阶段划分（2026-09-14 → 09-24）
 
-| 日期 | 目标 | 验收产物 |
-|---|---|---|
-| 09-14 ~ 09-15 | 环境 + 骨架 + HTTP/TLS spike | 本仓库初始化；选型结论写入 design.md |
-| 09-16 ~ 09-17 | 单文件下载 + 缓存布局 | `hf_hub_download` 通过 mock 服务器测试 |
-| 09-18 ~ 09-19 | 快照下载 + 认证 + 离线/镜像 | `snapshot_download` 端到端 |
-| 09-20 ~ 09-21 | API 端点 + CLI + parity 套件 | 与 Python huggingface_hub 的缓存树 diff 为空 |
-| 09-22 ~ 09-23 | 文档、示例、演示脚本 | README + 可复现 demo |
-| 09-24 | 验收提交 | 代码 + README + 测试 + 演示说明 |
+| 阶段 | 时间 | 目标 | 产出 |
+|---|---|---|---|
+| 阶段 0 · 工程准备 | 09-14（已完成） | 环境、仓库骨架、技能配置 | conda 环境、moon 脚手架、docs/agents |
+| 阶段 1 · 技术验证与核心下载 | 09-15 → 09-17 | HTTP/TLS 选型 + `hf_hub_download` + 缓存布局 | 见 `.scratch/core-download/issues/` |
+| 阶段 2 · 快照与接入配置 | 09-18 → 09-19 | `snapshot_download`、认证、离线/镜像 | 见 `.scratch/snapshot-config/issues/` |
+| 阶段 3 · 平台集成与 CLI | 09-20 → 09-21 | API 端点、CLI、错误语义 | 见 `.scratch/platform-cli/issues/` |
+| 阶段 4 · parity 质量与交付 | 09-22 → 09-24 | parity 套件、文档、演示、验收提交 | 见 `.scratch/quality-release/issues/` |
+| 阶段 5 · 候选池 | 本期之后 | transformers.mbt / onnx.mbt | 复用 modelhub 作为地基 |
+
+每个阶段独立验收：前一阶段的产出必须能单独演示或验证，再进入下一阶段。
+阶段 1 是唯一存在技术不确定项（HTTP/TLS）的阶段，因此最先展开为 issues。
 
 ## 风险与对策
 
