@@ -67,3 +67,17 @@ You can browse and install extra skills here:
   结论落定前不要写大量依赖某一实现的代码。
 - 与 `huggingface_hub` 的行为差异必须记录在案（文档或代码注释），
   因为 parity 是本项目的核心卖点。
+
+## 仓库级 Agent Skills
+
+本仓库在 `.agents/skills/` 下安装了 11 个工程类 skills（来自个人 ai-skills-library 的
+engineering 分类）。任务匹配时按需使用，使用前先完整阅读对应 `SKILL.md`：
+
+- `tdd` 测试驱动开发（红-绿-重构）；`triage` issue 分流与状态管理；
+  `to-prd` 整理 PRD 并发布到 issue tracker；`to-issues` 把计划拆成垂直切片 issues
+- `grill-with-docs` 结合 CONTEXT.md 与 ADR 拷问方案；`improve-codebase-architecture`
+  架构/解耦/可测试性改进；`zoom-out` 在陌生代码区域上升抽象层
+- `prototype` 一次性原型验证；`playwright` 浏览器自动化；
+  `diagnose` 可复现反馈回路诊断 hard bug
+- `setup-matt-pocock-skills` 配置 issue tracker、triage labels 与领域文档
+  （尚未运行，待与用户确认选项后执行）
