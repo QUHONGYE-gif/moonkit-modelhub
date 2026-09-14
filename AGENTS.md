@@ -80,4 +80,21 @@ engineering 分类）。任务匹配时按需使用，使用前先完整阅读�
 - `prototype` 一次性原型验证；`playwright` 浏览器自动化；
   `diagnose` 可复现反馈回路诊断 hard bug
 - `setup-matt-pocock-skills` 配置 issue tracker、triage labels 与领域文档
-  （尚未运行，待与用户确认选项后执行）
+  （已完成配置：本地 markdown issue + 默认 triage 标签 + single-context）
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs live as local markdown files under `.scratch/<feature-slug>/`.
+See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles map to themselves (`needs-triage`, `needs-info`,
+`ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout: `CONTEXT.md` at the repo root plus `docs/adr/`.
+See `docs/agents/domain.md`.
