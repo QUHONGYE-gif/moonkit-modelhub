@@ -76,6 +76,14 @@ pub async fn partial_size(path : String) -> Int raise HubError {
 
 ///|
 #warnings("-unused_error_type")
+pub async fn file_size(path : String) -> Int raise HubError {
+  @fs.read_file(path).binary().length() catch {
+    _ => 0
+  }
+}
+
+///|
+#warnings("-unused_error_type")
 pub async fn remove_file(path : String) -> Unit raise HubError {
   @fs.remove(path) catch {
     _ => ()
@@ -87,6 +95,19 @@ pub async fn rename_checked(old : String, new : String) -> Unit raise HubError {
   @fs.rename(old, new) catch {
     _ => raise HubError::Io("rename failed: \{old} -> \{new}")
   }
+}
+
+///|
+/// 写入缓存根目录标记文件（内容与 huggingface_hub 一致），幂等。
+pub async fn ensure_cache_tag(cache_root : String) -> Unit raise HubError {
+  let tag = "\{cache_root}/CACHEDIR.TAG"
+  if path_exists(tag) {
+    return
+  }
+  ensure_dir(cache_root)
+  write_file_checked(
+    tag, "Signature: 8a477f597d28d172789f06886806bc55\n# This file is a cache directory tag created by huggingface_hub.\n# For information about cache directory tags, see:\n#\thttps://bford.info/cachedir/\n",
+  )
 }
 
 ///|

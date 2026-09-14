@@ -24,11 +24,15 @@ pub fn default_offline() -> Bool
 
 pub fn dirname(String) -> String
 
-pub async fn download_resumable(String, String?, String) -> String raise HubError
+pub async fn download_resumable(String, String?, String, String) -> String raise HubError
+
+pub async fn ensure_cache_tag(String) -> Unit raise HubError
 
 pub async fn ensure_dir(String) -> Unit raise HubError
 
 pub async fn fetch_revision_info(String, String, String, String?) -> (String, Array[String]) raise HubError
+
+pub async fn file_size(String) -> Int raise HubError
 
 pub async fn get_follow(String, Map[@http.CaseInsensitiveString, String], Int) -> (Int, Map[@http.CaseInsensitiveString, String], Bytes) raise HubError
 

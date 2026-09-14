@@ -34,6 +34,25 @@ moon test --target native
 
 parity 测试依赖安装：`pip install huggingface_hub`（在 `moonbit` 环境内）。
 
+## 快速开始
+
+```bash
+# 一键演示（info → download → snapshot → 缓存树）：
+conda run -n moonbit bash scripts/demo.sh
+
+# parity 验证：与 Python huggingface_hub 生成同一缓存树：
+conda run -n moonbit python scripts/parity_test.py
+```
+
+## 功能
+
+- `hf_hub_download` / `snapshot_download`：单文件与快照下载，断点续传
+- 缓存 parity：与 huggingface_hub 完全一致的目录树（blobs / snapshots / refs /
+  trees / .locks / CACHEDIR.TAG）
+- `model_info` / `dataset_info` 元信息端点
+- 认证（`HF_TOKEN`）、离线（`HF_HUB_OFFLINE`）、镜像（`HF_ENDPOINT`）
+- CLI：`modelhub download | snapshot | info`
+
 ## 许可证
 
 Apache-2.0

@@ -126,6 +126,7 @@ pub async fn snapshot_download(
       "snapshot_download is not available in offline mode",
     )
   }
+  ensure_cache_tag(config.cache_dir)
   let (sha, files) = fetch_revision_info(
     config.endpoint,
     repo_id,
@@ -135,10 +136,50 @@ pub async fn snapshot_download(
   let refs = refs_path(config.cache_dir, repo_id, config.revision)
   ensure_dir(dirname(refs))
   write_file_checked(refs, sha)
+  let entries : Array[(String, Int, String)] = []
   for filename in files {
     if allowed(filename, allow_patterns, ignore_patterns) {
-      let _ = hf_hub_download(repo_id, filename, config)
+      let path = hf_hub_download(repo_id, filename, config)
+      let size = file_size(path)
+      let blob_id = (@fs.realpath(path) catch { _ => filename })
+        .rev_after("/")
+        .unwrap_or(filename)
+        .to_owned()
+      entries.push((filename, size, blob_id))
     }
   }
+  write_tree_cache(config.cache_dir, repo_id, sha, entries)
   snapshot_dir(config.cache_dir, repo_id, sha)
+}
+
+///|
+/// 写出 trees/<sha>.json（与 huggingface_hub 1.x 相同的缓存格式）。
+async fn write_tree_cache(
+  cache_root : String,
+  repo_id : String,
+  sha : String,
+  entries : Array[(String, Int, String)],
+) -> Unit raise HubError {
+  let dir = "\{repo_cache_dir(cache_root, repo_id)}/trees"
+  ensure_dir(dir)
+  let buf = StringBuilder()
+  buf.write_string("{\n \"format_version\": 1,\n \"files\": {")
+  if entries.is_empty() {
+    buf.write_string("}\n}")
+  } else {
+    buf.write_string("\n")
+    for i = 0; i < entries.length(); i = i + 1 {
+      let (name, size, blob_id) = entries[i]
+      buf.write_string("  \"\{name}\": {\n")
+      buf.write_string("   \"size\": \{size},\n")
+      buf.write_string("   \"blob_id\": \"\{blob_id}\"\n")
+      if i < entries.length() - 1 {
+        buf.write_string("  },\n")
+      } else {
+        buf.write_string("  }\n")
+      }
+    }
+    buf.write_string(" }\n}")
+  }
+  write_file_checked("\{dir}/\{sha}.json", buf.to_string())
 }

@@ -2,14 +2,14 @@
 """Local mock of the HuggingFace Hub for modelhub tests.
 
 Endpoints:
-  GET /hello                              -> 200 "hello world"
-  GET /redirect                           -> 302 -> /hello
-  GET /echo-headers                       -> 200 JSON of received headers
-  GET /api/models/<repo>/revision/<rev>   -> {"sha": "commit-<rev>"}
-  GET /<repo>/resolve/<rev>/<file>        -> 302 -> /cdn/<etag>/<file>
-  GET /cdn/<etag>/<file>                  -> 200/206 file bytes (ETag + Range)
-  GET /cdn/<etag>/<file>?interrupt_after=N
-                                          -> close connection after N bytes
+  GET/HEAD /hello                              -> 200 "hello world"
+  GET/HEAD /redirect                           -> 302 -> /hello
+  GET/HEAD /echo-headers                       -> 200 JSON of received headers
+  GET/HEAD /api/models/<repo>                  -> repo metadata (id/sha/siblings)
+  GET/HEAD /api/models/<repo>/revision/<rev>   -> {"sha": "commit-<rev>", siblings}
+  GET/HEAD /<repo>/resolve/<rev>/<file>        -> 302 -> /cdn/<etag>/<file>
+  GET/HEAD /cdn/<etag>/<file>                  -> 200/206 file bytes (ETag + Range)
+  GET /cdn/<etag>/<file>?interrupt_after=N     -> close connection after N bytes
 """
 
 import hashlib
@@ -17,9 +17,11 @@ import json
 import os
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
-FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tests", "fixtures")
+FIXTURES = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "tests", "fixtures"
+)
 PORT = int(os.environ.get("MOCK_PORT", "8765"))
 
 
@@ -34,10 +36,10 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
-        for k, v in (extra or {}).items():
-            self.send_header(k, v)
+        for key, value in (extra or {}).items():
+            self.send_header(key, value)
         self.end_headers()
-        if data:
+        if self.command != "HEAD" and data:
             self.wfile.write(data)
 
     def _fixture_path(self, repo, filename):
@@ -47,34 +49,32 @@ class Handler(BaseHTTPRequestHandler):
             return None
         return path
 
-    def do_GET(self):
-        parsed = urlparse(self.path)
-        path = parsed.path
-        query = parse_qs(parsed.query)
+    def _repo_siblings(self, repo):
+        dir_path = os.path.join(FIXTURES, repo)
+        if not os.path.isdir(dir_path):
+            return None
+        return [{"rfilename": f} for f in sorted(os.listdir(dir_path))]
 
+    def _route(self, path, query):
         if path == "/hello":
-            self._send(200, "hello world")
-            return
+            return 200, "hello world", None
         if path == "/redirect":
-            self._send(302, "", extra={"Location": "/hello"})
-            return
+            return 302, "", {"Location": "/hello"}
         if path == "/echo-headers":
             headers = {k: v for k, v in self.headers.items()}
-            self._send(200, json.dumps(headers, indent=2), "application/json")
-            return
+            return 200, json.dumps(headers, indent=2), None
 
-        # /api/models/<repo>/revision/<rev>
         if path.startswith("/api/models/"):
             parts = path.strip("/").split("/")
             if len(parts) == 3:
-                repo = parts[2]
-                files = sorted(os.listdir(os.path.join(FIXTURES, repo)))
-                siblings = [{"rfilename": f} for f in files]
-                self._send(
+                siblings = self._repo_siblings(parts[2])
+                if siblings is None:
+                    return 404, "not found", None
+                return (
                     200,
                     json.dumps(
                         {
-                            "id": repo,
+                            "id": parts[2],
                             "sha": "commit-main",
                             "private": False,
                             "downloads": 1,
@@ -82,85 +82,146 @@ class Handler(BaseHTTPRequestHandler):
                             "siblings": siblings,
                         }
                     ),
-                    "application/json",
+                    None,
                 )
-                return
             if len(parts) == 5 and parts[3] == "revision":
                 repo, rev = parts[2], parts[4]
-                files = sorted(os.listdir(os.path.join(FIXTURES, repo)))
-                siblings = [{"rfilename": f} for f in files]
-                self._send(
+                siblings = self._repo_siblings(repo)
+                if siblings is None:
+                    return 404, "not found", None
+                return (
                     200,
                     json.dumps(
-                        {"sha": "commit-" + rev, "siblings": siblings}
+                        {
+                            "id": repo,
+                            "sha": "commit-" + rev,
+                            "private": False,
+                            "downloads": 1,
+                            "likes": 0,
+                            "siblings": siblings,
+                        }
                     ),
-                    "application/json",
+                    None,
                 )
-                return
+            if len(parts) == 5 and parts[3] == "tree":
+                repo = parts[2]
+                siblings = self._repo_siblings(repo)
+                if siblings is None:
+                    return 404, "not found", None
+                files = []
+                for sibling in siblings:
+                    fixture = self._fixture_path(repo, sibling["rfilename"])
+                    with open(fixture, "rb") as f:
+                        content = f.read()
+                    files.append(
+                        {
+                            "type": "file",
+                            "path": sibling["rfilename"],
+                            "size": len(content),
+                            "oid": hashlib.sha256(content).hexdigest(),
+                        }
+                    )
+                return 200, json.dumps(files), None
 
         # /<repo>/resolve/<rev>/<file>
         parts = path.strip("/").split("/")
         if len(parts) >= 4 and parts[1] == "resolve":
             repo, rev, filename = parts[0], parts[2], "/".join(parts[3:])
+            rev = rev if rev.startswith("commit-") else "commit-" + rev
             fixture = self._fixture_path(repo, filename)
             if fixture is None:
-                self._send(404, "entry not found")
-                return
+                return 404, "entry not found", None
             with open(fixture, "rb") as f:
                 content = f.read()
             etag = hashlib.sha256(content).hexdigest()
-            self._send(302, "", extra={"Location": "/cdn/%s/%s" % (etag, filename)})
-            return
+            return (
+                302,
+                "",
+                {
+                    "Location": "/cdn/%s/%s?commit=%s"
+                    % (etag, filename, rev)
+                },
+            )
 
         # /cdn/<etag>/<file>
         if path.startswith("/cdn/"):
             parts = path.strip("/").split("/")
             if len(parts) >= 3:
                 etag, filename = parts[1], "/".join(parts[2:])
-                repo = self._repo_for_filename(filename)
-                fixture = self._fixture_path(repo, filename) if repo else None
+                fixture = self._find_fixture(filename)
                 if fixture is None:
-                    self._send(404, "entry not found")
-                    return
+                    return 404, "entry not found", None
                 with open(fixture, "rb") as f:
                     content = f.read()
-                extra = {"ETag": '"%s"' % etag}
+                extra = {"ETag": '"%s"' % etag, "X-Linked-Etag": '"%s"' % etag}
+                commit = query.get("commit", [None])[0]
+                if commit is not None:
+                    extra["X-Repo-Commit"] = commit
                 range_header = self.headers.get("Range")
                 if range_header and range_header.startswith("bytes="):
                     spec = range_header[len("bytes="):].split("-", 1)
                     start = int(spec[0]) if spec[0] else 0
-                    end = int(spec[1]) if len(spec) > 1 and spec[1] else len(content) - 1
-                    part = content[start:end + 1]
-                    extra["Content-Range"] = "bytes %d-%d/%d" % (start, end, len(content))
-                    self._send(206, part, extra=extra)
-                    return
+                    end = (
+                        int(spec[1])
+                        if len(spec) > 1 and spec[1]
+                        else len(content) - 1
+                    )
+                    part = content[start : end + 1]
+                    extra["Content-Range"] = "bytes %d-%d/%d" % (
+                        start,
+                        end,
+                        len(content),
+                    )
+                    return 206, part, extra
                 interrupt = query.get("interrupt_after", [None])[0]
-                self.send_response(200)
-                self.send_header("Content-Type", "text/plain; charset=utf-8")
-                self.send_header("Content-Length", str(len(content)))
-                for k, v in extra.items():
-                    self.send_header(k, v)
-                self.end_headers()
-                if interrupt is not None:
+                if interrupt is not None and self.command != "HEAD":
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/plain; charset=utf-8")
+                    self.send_header("Content-Length", str(len(content)))
+                    for key, value in extra.items():
+                        self.send_header(key, value)
+                    self.end_headers()
                     self.wfile.write(content[: int(interrupt)])
                     self.wfile.flush()
                     self.close_connection = True
-                else:
-                    self.wfile.write(content)
-                return
+                    return None
+                return 200, content, extra
 
-        self._send(404, "not found")
+        return 404, "not found", None
 
-    def _repo_for_filename(self, filename):
+    def _find_fixture(self, filename):
         for repo in os.listdir(FIXTURES):
-            if os.path.isfile(os.path.join(FIXTURES, repo, filename)):
-                return repo
+            path = os.path.join(FIXTURES, repo, filename)
+            if os.path.isfile(path):
+                return path
         return None
+
+    def _handle(self):
+        parsed = urlparse(self.path)
+        result = self._route(parsed.path, parse_qs(parsed.query))
+        if result is None:
+            return
+        code, body, extra = result
+        ctype = (
+            "application/json"
+            if isinstance(body, str) and body.lstrip().startswith(("{", "["))
+            else "text/plain; charset=utf-8"
+        )
+        self._send(code, body, ctype, extra)
+
+    def do_GET(self):
+        self._handle()
+
+    def do_HEAD(self):
+        self._handle()
 
 
 def main():
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
-    print("mock hub listening on 127.0.0.1:%d (fixtures=%s)" % (PORT, FIXTURES), file=sys.stderr)
+    print(
+        "mock hub listening on 127.0.0.1:%d (fixtures=%s)" % (PORT, FIXTURES),
+        file=sys.stderr,
+    )
     server.serve_forever()
 
 

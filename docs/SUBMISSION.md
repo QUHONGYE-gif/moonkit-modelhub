@@ -23,7 +23,7 @@
 | 开源合规 | ✅ Apache-2.0，无移植代码 |
 | AI 可解释 | ✅ 见文末「AI 协作说明」 |
 
-## 当前进度（阶段 1–3 已完成，09-14）
+## 当前进度（阶段 1–4 已完成，09-14）
 
 - **HTTP/TLS 选型**：`moonbitlang/async@0.21.3`，native/wasm/js 三后端可用，
   结论与验证记录见 [design.md](design.md)。
@@ -37,9 +37,11 @@
   `HF_HUB_OFFLINE` 离线模式，`HF_ENDPOINT` 镜像；401/403 → `GatedRepo`。
 - **元信息与 CLI**：`model_info` / `dataset_info`；CLI 子命令
   `modelhub download | snapshot | info`（环境变量继承 + 命令行覆盖）。
+- **parity 验证**：与 Python huggingface_hub 1.31 在同一 mock 上生成的缓存树
+  逐文件一致（`scripts/parity_test.py` 输出 PARITY OK）。
 
 测试：native 目标 12/12 通过（进程内 mock 服务器），wasm 目标通过；
-三个 CLI 子命令对本地 mock 演示通过。
+三个 CLI 子命令与一键 demo 对本地 mock 演示通过。
 
 ## 如何运行
 
@@ -52,6 +54,10 @@ python3 scripts/mock_hub_server.py &
 moon run cmd/main --target native -- gpt2 config.json \
   --endpoint http://127.0.0.1:8765 --cache-dir /tmp/modelhub-demo
 find /tmp/modelhub-demo        # 观察 HF 兼容缓存树
+
+# 一键演示与 parity 验证：
+bash scripts/demo.sh
+python scripts/parity_test.py
 ```
 
 ## 路线图
@@ -59,7 +65,7 @@ find /tmp/modelhub-demo        # 观察 HF 兼容缓存树
 - 阶段 1 · 技术验证与核心下载 ✅（issue #1）
 - 阶段 2 · 快照下载与接入配置 ✅（issue #2）
 - 阶段 3 · 平台集成与 CLI ✅（issue #3）
-- 阶段 4 · parity 质量与交付（对照 Python 的 parity 套件、演示、9/24 验收）
+- 阶段 4 · parity 质量与交付 ✅（issue #4）
 - 候选池 · transformers.mbt / onnx.mbt（复用 modelhub 作为地基）
 
 ## AI 协作说明

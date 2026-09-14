@@ -211,8 +211,10 @@ pub async fn resolve_sha(
 pub async fn download_resumable(
   url : String,
   token : String?,
-  blobs : String,
+  cache_root : String,
+  repo_id : String,
 ) -> String raise HubError {
+  let blobs = blob_dir(cache_root, repo_id)
   let (code, headers, client) = get_stream_follow(url, auth_headers(token), 10)
   if code == 401 || code == 403 {
     client.close()
@@ -257,6 +259,10 @@ pub async fn download_resumable(
     copy_stream(client, incomplete, 0)
     rename_checked(incomplete, dest)
   }
+  let repo_name = repo_id.replace_all(old="/", new="--")
+  let lock = "\{cache_root}/.locks/models--\{repo_name}/\{etag}.lock"
+  ensure_dir(dirname(lock))
+  write_file_checked(lock, "")
   etag
 }
 
@@ -303,6 +309,7 @@ pub async fn hf_hub_download(
   filename : String,
   config : HubConfig,
 ) -> String raise HubError {
+  ensure_cache_tag(config.cache_dir)
   let sha = resolve_sha(
     config.endpoint,
     repo_id,
@@ -326,7 +333,7 @@ pub async fn hf_hub_download(
   let url = "\{config.endpoint}/\{repo_id}/resolve/\{config.revision}/\{filename}"
   let blobs = blob_dir(config.cache_dir, repo_id)
   ensure_dir(blobs)
-  let etag = download_resumable(url, config.token, blobs)
+  let etag = download_resumable(url, config.token, config.cache_dir, repo_id)
   let snap_dir = dirname(snap_file)
   ensure_dir(snap_dir)
   symlink_checked("../../blobs/\{etag}", snap_file)
