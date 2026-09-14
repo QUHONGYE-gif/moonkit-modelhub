@@ -66,9 +66,36 @@ class Handler(BaseHTTPRequestHandler):
         # /api/models/<repo>/revision/<rev>
         if path.startswith("/api/models/"):
             parts = path.strip("/").split("/")
+            if len(parts) == 3:
+                repo = parts[2]
+                files = sorted(os.listdir(os.path.join(FIXTURES, repo)))
+                siblings = [{"rfilename": f} for f in files]
+                self._send(
+                    200,
+                    json.dumps(
+                        {
+                            "id": repo,
+                            "sha": "commit-main",
+                            "private": False,
+                            "downloads": 1,
+                            "likes": 0,
+                            "siblings": siblings,
+                        }
+                    ),
+                    "application/json",
+                )
+                return
             if len(parts) == 5 and parts[3] == "revision":
                 repo, rev = parts[2], parts[4]
-                self._send(200, json.dumps({"sha": "commit-" + rev}), "application/json")
+                files = sorted(os.listdir(os.path.join(FIXTURES, repo)))
+                siblings = [{"rfilename": f} for f in files]
+                self._send(
+                    200,
+                    json.dumps(
+                        {"sha": "commit-" + rev, "siblings": siblings}
+                    ),
+                    "application/json",
+                )
                 return
 
         # /<repo>/resolve/<rev>/<file>

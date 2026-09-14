@@ -31,22 +31,32 @@ pub async fn fetch_revision_info(
     Some(Json::String(s)) => s
     _ => raise HubError::Parse("missing or non-string `sha` field from \{url}")
   }
+  (sha, parse_siblings(json))
+}
+
+///|
+/// 从 JSON 中提取 siblings 文件名列表（缺失时为空数组）。
+fn parse_siblings(json : Json) -> Array[String] {
   let files : Array[String] = []
-  match obj.get("siblings") {
-    Some(Json::Array(items)) =>
-      for item in items {
-        match item {
-          Json::Object(s) =>
-            match s.get("rfilename") {
-              Some(Json::String(name)) => files.push(name)
+  match json {
+    Json::Object(o) =>
+      match o.get("siblings") {
+        Some(Json::Array(items)) =>
+          for item in items {
+            match item {
+              Json::Object(s) =>
+                match s.get("rfilename") {
+                  Some(Json::String(name)) => files.push(name)
+                  _ => ()
+                }
               _ => ()
             }
-          _ => ()
-        }
+          }
+        _ => ()
       }
     _ => ()
   }
-  (sha, files)
+  files
 }
 
 ///|

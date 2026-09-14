@@ -465,3 +465,46 @@ async test "offline mode: cold cache raises Offline, warm cache hits" {
     fail("expected Offline, got \{@debug.to_string(denied)}")
   }
 }
+
+///|
+#cfg(target="native")
+async test "model_info parses metadata and maps 404" {
+  let root = @fs.tmpdir(prefix="modelhub-test")
+  let cache = "\{root}/hub"
+  let server = @http.Server(@socket.Addr::parse("127.0.0.1:0"))
+  let endpoint = "http://127.0.0.1:\{server.addr.port()}"
+  @async.with_task_group() <| group => {
+    group.spawn_bg(no_wait=true) <| () => {
+      server.run_forever() <| ((request, _body, conn) => {
+        match request.path {
+          "/api/models/gpt2" => {
+            conn.send_response(200, "OK", extra_headers={
+              "Content-Type": "application/json",
+            })
+            conn.write(
+              "{\"id\":\"gpt2\",\"sha\":\"commit-main\",\"private\":false,\"downloads\":1000,\"likes\":5,\"siblings\":[{\"rfilename\":\"config.json\"}]}",
+            )
+          }
+          "/api/models/unknown" => conn.send_response(404, "NotFound")
+          _ => conn.send_response(404, "NotFound")
+        }
+      })
+    }
+    let config = @modelhub.HubConfig::new(endpoint, cache)
+    let info = @modelhub.model_info("gpt2", config)
+    inspect(info.id, content="gpt2")
+    assert_eq(info.downloads, 1000)
+    assert_eq(info.likes, 5)
+    assert_true(!info.private)
+    inspect(info.siblings[0], content="config.json")
+    let missing = try {
+      let _ = @modelhub.model_info("unknown", config)
+      None
+    } catch {
+      e => Some(e)
+    }
+    guard missing is Some(@modelhub.HubError::RevisionNotFound(_)) else {
+      fail("expected RevisionNotFound, got \{@debug.to_string(missing)}")
+    }
+  }
+}

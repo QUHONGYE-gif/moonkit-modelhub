@@ -73,6 +73,22 @@ pub fn HubConfig::with_offline(self : HubConfig, offline : Bool) -> HubConfig {
 }
 
 ///|
+pub fn HubConfig::with_endpoint(
+  self : HubConfig,
+  endpoint : String,
+) -> HubConfig {
+  { ..self, endpoint, }
+}
+
+///|
+pub fn HubConfig::with_cache_dir(
+  self : HubConfig,
+  cache_dir : String,
+) -> HubConfig {
+  { ..self, cache_dir, }
+}
+
+///|
 /// 默认端点：HF_ENDPOINT 环境变量，否则官方地址。
 pub fn default_endpoint() -> String {
   @env.get_env_var("HF_ENDPOINT").unwrap_or("https://huggingface.co")
