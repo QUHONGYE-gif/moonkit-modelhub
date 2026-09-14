@@ -1,0 +1,5 @@
+// import {
+//   "moonkit/modelhub" @lib,
+// }
+
+pkgtype(kind: "executable")
