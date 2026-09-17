@@ -6,8 +6,8 @@ import {
   "moonbitlang/async",
   "moonbitlang/async/fs",
   "moonbitlang/async/io",
-  "moonkit/modelhub",
-  "moonkit/modelhub/transformers",
+  "QUHONGYE-gif/modelhub",
+  "QUHONGYE-gif/modelhub/transformers",
   "howtomakeaname/tokenizers-moonbit/tokenizer",
 }
 

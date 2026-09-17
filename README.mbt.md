@@ -6,7 +6,7 @@
 
 | 子包 | 定位 | 状态 | 验证方式 |
 |---|---|---|---|
-| `moonkit/modelhub` | HuggingFace Hub 客户端（下载/缓存/认证/离线/镜像） | ✅ | 与 huggingface_hub 1.31 缓存树逐文件 parity（本地 mock + 真实 hf-mirror，含 LFS） |
+| `QUHONGYE-gif/modelhub` | HuggingFace Hub 客户端（下载/缓存/认证/离线/镜像） | ✅ | 与 huggingface_hub 1.31 缓存树逐文件 parity（本地 mock + 真实 hf-mirror，含 LFS） |
 | `moonkit/nn` | 张量与推理内核（GEMM/激活/归一化/注意力/KV cache） | ✅ | numpy golden 逐元素对照 |
 | `moonkit/transformers` | GPT-2 级模型推理（safetensors/前向/生成） | ✅ | numpy golden + 真实 tiny-random-gpt2 端到端生成 |
 | `moonkit/onnx` | 通用 ONNX 图解释执行器（11 算子） | ✅ | numpy golden + 官方 ONNX backend test 子集 |

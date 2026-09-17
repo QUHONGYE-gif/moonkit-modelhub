@@ -2,7 +2,7 @@
 
 ## 项目
 
-**modelhub** —— MoonBit 的 HuggingFace Hub 客户端库（`moonkit/modelhub`）。
+**modelhub** —— MoonBit 的 HuggingFace Hub 客户端库（`QUHONGYE-gif/modelhub`）。
 用纯 MoonBit 实现与 Python `huggingface_hub` 兼容的模型仓库下载、修订版本解析
 与缓存管理，让 MoonBit 程序可以用 `hf_hub_download("gpt2", "config.json")`
 直接接入 HuggingFace 生态。

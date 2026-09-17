@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "moonkit/modelhub/transformers"
+package "QUHONGYE-gif/modelhub/transformers"
 
 import {
+  "QUHONGYE-gif/modelhub/nn",
   "moonbitlang/core/ref",
-  "moonkit/modelhub/nn",
 }
 
 // Values

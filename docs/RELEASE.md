@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-模块名：`moonkit/modelhub`（含四个子包：顶层 modelhub、`nn`、`transformers`、`onnx`）。
+模块名：`QUHONGYE-gif/modelhub`（含四个子包：顶层 modelhub、`nn`、`transformers`、`onnx`）。
 
 已完成准备：
 

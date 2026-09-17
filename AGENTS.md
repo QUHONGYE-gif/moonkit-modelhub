@@ -62,7 +62,7 @@ You can browse and install extra skills here:
 
 ## 项目约定
 
-- 库代码在顶层包 `moonkit/modelhub`；CLI 入口在 `cmd/main`。
+- 库代码在顶层包 `QUHONGYE-gif/modelhub`；CLI 入口在 `cmd/main`。
 - HTTP/TLS 技术选型必须先经 spike 并把结论写入 `docs/design.md`，
   结论落定前不要写大量依赖某一实现的代码。
 - 与 `huggingface_hub` 的行为差异必须记录在案（文档或代码注释），

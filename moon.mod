@@ -9,7 +9,7 @@
 //   "moonbitlang/x@0.4.6",
 // }
 
-name = "moonkit/modelhub"
+name = "QUHONGYE-gif/modelhub"
 
 version = "0.1.0"
 

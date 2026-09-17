@@ -1,10 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "moonkit/modelhub/onnx"
+package "QUHONGYE-gif/modelhub/onnx"
 
 import {
+  "QUHONGYE-gif/modelhub/nn",
   "moonbitlang/core/debug",
   "moonbitlang/core/ref",
-  "moonkit/modelhub/nn",
 }
 
 // Values

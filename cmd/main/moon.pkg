@@ -2,7 +2,7 @@ import {
   "moonbitlang/core/argparse",
   "moonbitlang/core/debug",
   "moonbitlang/async",
-  "moonkit/modelhub",
+  "QUHONGYE-gif/modelhub",
 }
 
 supported_targets = "+native"

@@ -4,8 +4,8 @@ import {
   "moonbitlang/async",
   "moonbitlang/async/fs",
   "moonbitlang/async/io",
-  "moonkit/modelhub/nn",
-  "moonkit/modelhub/onnx",
+  "QUHONGYE-gif/modelhub/nn",
+  "QUHONGYE-gif/modelhub/onnx",
 }
 
 supported_targets = "+native"

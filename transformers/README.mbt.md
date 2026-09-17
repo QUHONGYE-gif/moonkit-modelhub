@@ -1,7 +1,7 @@
 # moonkit/transformers
 
 GPT-2 级模型推理：safetensors 权重解析、完整前向、KV cache 贪心/温度生成。
-配合 `moonkit/modelhub` 拉模型与 `tokenizers-moonbit` 分词，就是一条完整的
+配合 `QUHONGYE-gif/modelhub` 拉模型与 `tokenizers-moonbit` 分词，就是一条完整的
 「拉模型 → 分词 → 生成 → 解码」流水线。
 
 ## 能力

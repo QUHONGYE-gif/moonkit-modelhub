@@ -1,6 +1,6 @@
 import {
   "moonbitlang/core/debug",
-  "moonkit/modelhub/nn",
+  "QUHONGYE-gif/modelhub/nn",
 }
 
 supported_targets = "+native"
