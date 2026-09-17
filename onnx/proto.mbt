@@ -149,7 +149,7 @@ fn read_packed_varints(r : ProtoReader) -> Array[Int64] raise OnnxError {
   let sub = ProtoReader::from_view(view)
   let out : Array[Int64] = []
   while sub.pos.val < sub.bytes.length() {
-    let _ = out.push(read_varint(sub).to_int64())
+    let _ = out.push(read_varint(sub).reinterpret_as_int64())
   }
   out
 }
@@ -206,7 +206,7 @@ fn parse_attribute(view : BytesView) -> (String, AttrValue) raise OnnxError {
     match field {
       1 => name = read_string(r)
       2 => f_val = Float::reinterpret_from_uint(read_u32(r)).to_double()
-      3 => i_val = read_varint(r).to_int64()
+      3 => i_val = read_varint(r).reinterpret_as_int64()
       4 => s_val = read_string(r)
       8 =>
         if wire == 2 {
@@ -273,7 +273,7 @@ fn parse_tensor(view : BytesView) -> OnnxTensor raise OnnxError {
             let _ = dims.push(d)
           }
         } else {
-          let _ = dims.push(read_varint(r).to_int64())
+          let _ = dims.push(read_varint(r).reinterpret_as_int64())
         }
       2 => data_type = read_varint(r).to_int()
       3 =>
@@ -282,7 +282,7 @@ fn parse_tensor(view : BytesView) -> OnnxTensor raise OnnxError {
             let _ = data.push(d.to_double())
           }
         } else {
-          let _ = data.push(read_varint(r).to_int64().to_double())
+          let _ = data.push(read_varint(r).reinterpret_as_int64().to_double())
         }
       4 =>
         if wire == 2 {
@@ -312,7 +312,7 @@ fn parse_tensor(view : BytesView) -> OnnxTensor raise OnnxError {
           }
           while sub.pos.val < sub.bytes.length() {
             let v = read_u64(sub)
-            let _ = data.push(v.to_int64().to_double())
+            let _ = data.push(v.reinterpret_as_int64().to_double())
           }
         } else {
           raise OnnxError::Parse("unsupported raw_data dtype \{data_type}")
@@ -335,7 +335,7 @@ fn parse_opset(view : BytesView) -> Int64 raise OnnxError {
   while r.pos.val < r.bytes.length() {
     let (field, wire) = read_key(r)
     match field {
-      2 => version = read_varint(r).to_int64()
+      2 => version = read_varint(r).reinterpret_as_int64()
       _ => skip_field(r, wire)
     }
   }
@@ -400,7 +400,7 @@ pub fn parse_model(bytes : Bytes) -> OnnxModel raise OnnxError {
   while r.pos.val < r.bytes.length() {
     let (field, wire) = read_key(r)
     match field {
-      1 => ir_version = read_varint(r).to_int64()
+      1 => ir_version = read_varint(r).reinterpret_as_int64()
       7 => {
         let view7 = read_len_view(r)
         graph = Some(parse_graph(view7))
