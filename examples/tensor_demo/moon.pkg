@@ -1,0 +1,8 @@
+import {
+  "moonbitlang/core/debug",
+  "moonkit/modelhub/nn",
+}
+
+supported_targets = "+native"
+
+pkgtype(kind: "executable")

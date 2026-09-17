@@ -50,6 +50,9 @@
 - **onnx.mbt（阶段 7）**：protobuf wire 解析 + 通用 ONNX 图解释执行器
   （11 个算子），numpy golden 对照，并通过官方 ONNX backend test 的
   Gemm/Relu/Softmax/MatMul/Add 五个用例。
+- **生态收口（阶段 8）**：三个可运行示例 + 一键脚本、基准程序与数据
+  （docs/BENCHMARK.md）、根 README 生态总览与子包文档、
+  docs/ARCHITECTURE.md，发布预检 `moon package` 通过（docs/RELEASE.md）。
 
 测试：native 目标 31/31 通过（进程内 mock 服务器 + golden + 官方 backend 子集），
 wasm 目标 21/21 通过；
@@ -85,6 +88,7 @@ PARITY_ENDPOINT=https://hf-mirror.com PARITY_REPO=sshleifer/tiny-gpt2 \
 - 阶段 5 · 张量与推理内核 ✅（issue #6）
 - 阶段 6 · transformers.mbt ✅（issue #7）
 - 阶段 7 · onnx.mbt ✅（issue #8）
+- 阶段 8 · 生态收口与发布准备 ✅（issue #9）
 - 候选池 · transformers.mbt / onnx.mbt（复用 modelhub 作为地基）
 
 ## AI 协作说明

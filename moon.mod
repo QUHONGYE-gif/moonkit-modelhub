@@ -21,9 +21,20 @@ license = "Apache-2.0"
 
 preferred_target = "wasm"
 
-description = "MoonBit 的 HuggingFace Hub 客户端：与 huggingface_hub 兼容的模型下载、修订版本解析与缓存管理。"
+description = "MoonBit × HuggingFace 生态栈：与 huggingface_hub 兼容的 Hub 客户端、张量推理内核、GPT-2 推理与通用 ONNX 图执行器。"
 
-keywords = [ "huggingface", "hub", "llm", "ml", "download", "cache" ]
+keywords = [
+  "huggingface",
+  "hub",
+  "llm",
+  "ml",
+  "tensor",
+  "transformers",
+  "onnx",
+  "inference",
+  "download",
+  "cache",
+]
 
 import {
   "moonbitlang/async@0.21.3",

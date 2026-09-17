@@ -1,0 +1,10 @@
+import {
+  "moonbitlang/core/env",
+  "moonbitlang/async",
+  "moonbitlang/async/fs",
+  "moonkit/modelhub",
+}
+
+supported_targets = "+native"
+
+pkgtype(kind: "executable")

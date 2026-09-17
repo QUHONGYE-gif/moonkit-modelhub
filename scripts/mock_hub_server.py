@@ -138,17 +138,17 @@ class Handler(BaseHTTPRequestHandler):
                 302,
                 "",
                 {
-                    "Location": "/cdn/%s/%s?commit=%s"
-                    % (etag, filename, rev)
+                    "Location": "/cdn/%s/%s/%s?commit=%s"
+                    % (repo, etag, filename, rev)
                 },
             )
 
         # /cdn/<etag>/<file>
         if path.startswith("/cdn/"):
             parts = path.strip("/").split("/")
-            if len(parts) >= 3:
-                etag, filename = parts[1], "/".join(parts[2:])
-                fixture = self._find_fixture(filename)
+            if len(parts) >= 4:
+                repo, etag, filename = parts[1], parts[2], "/".join(parts[3:])
+                fixture = self._fixture_path(repo, filename)
                 if fixture is None:
                     return 404, "entry not found", None
                 with open(fixture, "rb") as f:
