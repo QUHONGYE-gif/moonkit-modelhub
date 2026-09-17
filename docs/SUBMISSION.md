@@ -53,6 +53,8 @@
 - **生态收口（阶段 8）**：三个可运行示例 + 一键脚本、基准程序与数据
   （docs/BENCHMARK.md）、根 README 生态总览与子包文档、
   docs/ARCHITECTURE.md，发布预检 `moon package` 通过（docs/RELEASE.md）。
+- **发布**：`QUHONGYE-gif/modelhub` v0.1.0 已发布到 mooncakes
+  （https://mooncakes.io/docs/QUHONGYE-gif/modelhub）。
 
 测试：native 目标 31/31 通过（进程内 mock 服务器 + golden + 官方 backend 子集），
 wasm 目标 21/21 通过；

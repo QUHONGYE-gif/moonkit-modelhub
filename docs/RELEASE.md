@@ -1,4 +1,15 @@
-# 发布指南（mooncakes）
+# 发布记录（mooncakes）
+
+## 已发布 ✅
+
+- 包：`QUHONGYE-gif/modelhub` v0.1.0
+- 页面：https://mooncakes.io/docs/QUHONGYE-gif/modelhub
+- 时间与结果：2026-09-17，`moon publish` Server status 200 OK
+
+> 注册表要求模块名前缀与账号用户名一致，因此模块名从 `moonkit/modelhub`
+> 改为 `QUHONGYE-gif/modelhub`（仓库内所有包路径已同步更新）。
+
+## 后续版本发布步骤
 
 ## 当前状态
 
