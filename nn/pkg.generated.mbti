@@ -10,6 +10,8 @@ pub fn attention(Tensor, Tensor, Tensor, Bool) -> Tensor raise TensorError
 
 pub fn cat_seq(Tensor, Tensor) -> Tensor raise TensorError
 
+pub fn concat_2d(Tensor, Tensor, Int) -> Tensor raise TensorError
+
 pub fn multi_head_attention(Tensor, Tensor, Tensor, Int, Bool) -> Tensor raise TensorError
 
 // Errors
@@ -32,12 +34,17 @@ pub fn Tensor::matmul(Self, Self) -> Self raise TensorError
 pub fn Tensor::mul(Self, Self) -> Self raise TensorError
 pub fn Tensor::new(Array[Int], Array[Double]) -> Self raise TensorError
 pub fn Tensor::numel(Self) -> Int
+pub fn Tensor::permute(Self, Array[Int]) -> Self raise TensorError
 pub fn Tensor::randn(Array[Int], UInt64) -> Self
+pub fn Tensor::relu(Self) -> Self
 pub fn Tensor::reshape(Self, Array[Int]) -> Self raise TensorError
 pub fn Tensor::rms_norm(Self, Self?, Double) -> Self raise TensorError
 pub fn Tensor::scale(Self, Double) -> Self
+pub fn Tensor::sigmoid(Self) -> Self
 pub fn Tensor::softmax(Self) -> Self raise TensorError
+pub fn Tensor::softmax_axis(Self, Int) -> Self raise TensorError
 pub fn Tensor::sub(Self, Self) -> Self raise TensorError
+pub fn Tensor::tanh(Self) -> Self
 pub fn Tensor::transpose(Self, Int, Int) -> Self
 pub fn Tensor::zeros(Array[Int]) -> Self
 

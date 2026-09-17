@@ -1,0 +1,64 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonkit/modelhub/onnx"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/ref",
+  "moonkit/modelhub/nn",
+}
+
+// Values
+pub fn parse_model(Bytes) -> OnnxModel raise OnnxError
+
+pub fn parse_tensor_bytes(Bytes) -> OnnxTensor raise OnnxError
+
+pub fn run_model(OnnxModel, Map[String, @nn.Tensor]) -> Map[String, @nn.Tensor] raise OnnxError
+
+// Errors
+pub(all) suberror OnnxError {
+  Parse(String)
+} derive(@debug.Debug)
+pub impl Show for OnnxError
+
+// Types and methods
+pub enum AttrValue {
+  Int(Int64)
+  Float(Double)
+  Str(String)
+  Ints(Array[Int])
+} derive(@debug.Debug)
+
+pub struct OnnxGraph {
+  nodes : Array[OnnxNode]
+  initializers : Map[String, OnnxTensor]
+  inputs : Array[String]
+  outputs : Array[String]
+} derive(@debug.Debug)
+
+pub struct OnnxModel {
+  ir_version : Int64
+  opset : Int64
+  graph : OnnxGraph
+} derive(@debug.Debug)
+
+pub struct OnnxNode {
+  inputs : Array[String]
+  outputs : Array[String]
+  op_type : String
+  attrs : Map[String, AttrValue]
+} derive(@debug.Debug)
+
+pub struct OnnxTensor {
+  name : String
+  shape : Array[Int]
+  data : Array[Double]
+} derive(@debug.Debug)
+
+pub struct ProtoReader {
+  bytes : BytesView
+  pos : @ref.Ref[Int]
+}
+
+// Type aliases
+
+// Traits

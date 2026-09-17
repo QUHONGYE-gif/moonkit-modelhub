@@ -79,11 +79,9 @@ async fn main {
   let out = gen.generate(ids, max_new, temperature) catch {
     e => abort("generate failed: \{e}")
   }
-  let text = tok.decode(out, skip_special_tokens=true) catch {
-    _ => abort("decode failed")
-  }
+  let text = tok.decode(out, skip_special_tokens=true)
   println("repo: \{repo}")
   println("prompt: \{prompt}")
-  println("tokens: \{out}")
+  println("tokens: \{@debug.to_string(out)}")
   println("output: \{text}")
 }

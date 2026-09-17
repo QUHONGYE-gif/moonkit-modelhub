@@ -47,9 +47,12 @@
 - **transformers.mbt（阶段 6）**：safetensors 解析、GPT-2 前向、
   KV cache 贪心/温度生成，numpy golden 对照；端到端对真实
   `hf-internal-testing/tiny-random-gpt2` 跑通「拉模型 → 分词 → 生成 → 解码」。
+- **onnx.mbt（阶段 7）**：protobuf wire 解析 + 通用 ONNX 图解释执行器
+  （11 个算子），numpy golden 对照，并通过官方 ONNX backend test 的
+  Gemm/Relu/Softmax/MatMul/Add 五个用例。
 
-测试：native 目标 28/28 通过（进程内 mock 服务器 + golden 对照），
-wasm 目标 18/18 通过；
+测试：native 目标 31/31 通过（进程内 mock 服务器 + golden + 官方 backend 子集），
+wasm 目标 21/21 通过；
 三个 CLI 子命令与一键 demo 对本地 mock 演示通过。
 
 ## 如何运行
@@ -81,6 +84,7 @@ PARITY_ENDPOINT=https://hf-mirror.com PARITY_REPO=sshleifer/tiny-gpt2 \
 - 阶段 4 · parity 质量与交付 ✅（issue #4）
 - 阶段 5 · 张量与推理内核 ✅（issue #6）
 - 阶段 6 · transformers.mbt ✅（issue #7）
+- 阶段 7 · onnx.mbt ✅（issue #8）
 - 候选池 · transformers.mbt / onnx.mbt（复用 modelhub 作为地基）
 
 ## AI 协作说明

@@ -116,7 +116,7 @@ pub fn parse_safetensors(
       let u = read_u32_le(bytes, base)
       let _ = data.push(Float::reinterpret_from_uint(u).to_double())
     }
-    let t = @nn.Tensor::new(shape, data) catch { e => raise e }
+    let t = @nn.Tensor::new(shape, data)
     tensors[name] = t
   }
   tensors

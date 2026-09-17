@@ -17,7 +17,7 @@ pub struct Generator {
 ///|
 pub fn Generator::new(model : Gpt2Model) -> Generator {
   let caches : Array[BlockCache] = []
-  for i in 0..<model.config.n_layer {
+  for _i in 0..<model.config.n_layer {
     let _ = caches.push({
       k: @nn.Tensor::zeros([1, 0, model.config.n_embd]),
       v: @nn.Tensor::zeros([1, 0, model.config.n_embd]),

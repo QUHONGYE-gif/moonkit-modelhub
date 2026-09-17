@@ -67,6 +67,47 @@ pub fn cat_seq(a : Tensor, b : Tensor) -> Tensor raise TensorError {
 }
 
 ///|
+/// 2D 张量沿 axis（0 或 1）拼接。
+pub fn concat_2d(
+  a : Tensor,
+  b : Tensor,
+  axis : Int,
+) -> Tensor raise TensorError {
+  guard a.shape.length() == 2 && b.shape.length() == 2 else {
+    raise TensorError::ShapeMismatch("concat_2d expects 2D inputs")
+  }
+  guard axis == 0 || axis == 1 else {
+    raise TensorError::ShapeMismatch("concat_2d axis must be 0 or 1")
+  }
+  let other_dim = 1 - axis
+  guard a.shape[other_dim] == b.shape[other_dim] else {
+    raise TensorError::ShapeMismatch("concat dims mismatch")
+  }
+  let rows_a = a.shape[0]
+  let cols_a = a.shape[1]
+  let data : Array[Double] = []
+  if axis == 0 {
+    for x in a.data {
+      let _ = data.push(x)
+    }
+    for x in b.data {
+      let _ = data.push(x)
+    }
+    { shape: [rows_a + b.shape[0], cols_a], data, }
+  } else {
+    for i in 0..<rows_a {
+      for j in 0..<cols_a {
+        let _ = data.push(a.data[i * cols_a + j])
+      }
+      for j in 0..<b.shape[1] {
+        let _ = data.push(b.data[i * b.shape[1] + j])
+      }
+    }
+    { shape: [rows_a, cols_a + b.shape[1]], data, }
+  }
+}
+
+///|
 /// 多头注意力：q/k/v 形状 [B,T,H*D]，按 num_heads 拆分后逐头计算。
 pub fn multi_head_attention(
   q : Tensor,

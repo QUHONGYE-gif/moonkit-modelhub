@@ -114,6 +114,41 @@ pub fn Tensor::transpose(self : Tensor, dim0 : Int, dim1 : Int) -> Tensor {
 }
 
 ///|
+/// 任意维度重排：输出第 i 维对应输入第 perm[i] 维。
+pub fn Tensor::permute(
+  self : Tensor,
+  perm : Array[Int],
+) -> Tensor raise TensorError {
+  guard perm.length() == self.shape.length() else {
+    raise TensorError::ShapeMismatch("perm rank mismatch")
+  }
+  let rank = self.shape.length()
+  let new_shape : Array[Int] = []
+  for p in perm {
+    let _ = new_shape.push(self.shape[p])
+  }
+  let idx = Array::make(rank, 0)
+  let data = Array::make(self.data.length(), 0.0)
+  for flat in 0..<self.data.length() {
+    let mut t = flat
+    for i = rank - 1; i >= 0; i = i - 1 {
+      idx[i] = t % new_shape[i]
+      t = t / new_shape[i]
+    }
+    let mut src = 0
+    for j in 0..<rank {
+      let mut k = 0
+      while perm[k] != j {
+        k = k + 1
+      }
+      src = src * self.shape[j] + idx[k]
+    }
+    data[flat] = self.data[src]
+  }
+  { shape: new_shape, data, }
+}
+
+///|
 fn zip_impl(
   a : Tensor,
   b : Tensor,

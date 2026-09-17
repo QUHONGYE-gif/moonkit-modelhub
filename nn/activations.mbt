@@ -1,6 +1,27 @@
 // moonkit/nn：激活与归一化。
 
 ///|
+pub fn Tensor::relu(self : Tensor) -> Tensor {
+  {
+    shape: self.shape,
+    data: self.data.map(fn(x) { if x > 0.0 { x } else { 0.0 } }),
+  }
+}
+
+///|
+pub fn Tensor::sigmoid(self : Tensor) -> Tensor {
+  {
+    shape: self.shape,
+    data: self.data.map(fn(x) { 1.0 / (1.0 + @math.exp(-x)) }),
+  }
+}
+
+///|
+pub fn Tensor::tanh(self : Tensor) -> Tensor {
+  { shape: self.shape, data: self.data.map(fn(x) { @math.tanh(x) }), }
+}
+
+///|
 /// GPT-2 同款 GELU tanh 近似。
 pub fn Tensor::gelu(self : Tensor) -> Tensor {
   let c = 0.7978845608028654
@@ -14,28 +35,48 @@ pub fn Tensor::gelu(self : Tensor) -> Tensor {
 ///|
 /// 数值稳定 softmax，沿最后一维。
 pub fn Tensor::softmax(self : Tensor) -> Tensor raise TensorError {
+  self.softmax_axis(self.shape.length() - 1)
+}
+
+///|
+/// 数值稳定 softmax，沿指定维。
+pub fn Tensor::softmax_axis(
+  self : Tensor,
+  axis : Int,
+) -> Tensor raise TensorError {
   guard self.shape.length() >= 1 else {
     raise TensorError::ShapeMismatch("softmax expects rank >= 1")
   }
-  let cols = self.shape[self.shape.length() - 1]
-  let rows = self.data.length() / cols
+  let ax = if axis < 0 { self.shape.length() + axis } else { axis }
+  guard ax >= 0 && ax < self.shape.length() else {
+    raise TensorError::ShapeMismatch("softmax axis out of range")
+  }
+  let axis_size = self.shape[ax]
+  let mut inner = 1
+  for i = ax + 1; i < self.shape.length(); i = i + 1 {
+    inner = inner * self.shape[i]
+  }
+  let outer = self.data.length() / (axis_size * inner)
   let data = Array::make(self.data.length(), 0.0)
-  for r in 0..<rows {
-    let base = r * cols
-    let mut mx = self.data[base]
-    for c in 1..<cols {
-      if self.data[base + c] > mx {
-        mx = self.data[base + c]
+  for o in 0..<outer {
+    for j in 0..<inner {
+      let base = o * axis_size * inner + j
+      let mut mx = self.data[base]
+      for k in 1..<axis_size {
+        let v = self.data[base + k * inner]
+        if v > mx {
+          mx = v
+        }
       }
-    }
-    let mut sum = 0.0
-    for c in 0..<cols {
-      let e = @math.exp(self.data[base + c] - mx)
-      data[base + c] = e
-      sum = sum + e
-    }
-    for c in 0..<cols {
-      data[base + c] = data[base + c] / sum
+      let mut sum = 0.0
+      for k in 0..<axis_size {
+        let e = @math.exp(self.data[base + k * inner] - mx)
+        data[base + k * inner] = e
+        sum = sum + e
+      }
+      for k in 0..<axis_size {
+        data[base + k * inner] = data[base + k * inner] / sum
+      }
     }
   }
   { shape: self.shape, data, }
